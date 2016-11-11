@@ -1,3 +1,5 @@
+detectbatch.*
+
 # Object files
 *.o
 *.ko
