@@ -38,7 +38,7 @@ static void do_writes(std::poisson_distribution<uint32_t> dist, int32_t nops,
 
 // bench computes the average read latency in us for the config.
 // bench will create, load data into, and delete benchfile.
-int64_t bench(std::string benchfile, BenchConfig cfg) {
+int64_t bench(const std::string &benchfile, BenchConfig cfg) {
 
   if (cfg.writesiz < cfg.wbufsiz) {
     std::cerr << "writesiz must be >= write buffer size\n";
@@ -151,7 +151,7 @@ static void do_writes(std::poisson_distribution<uint32_t> dist, int32_t nops,
   delete junk;
 }
 
-void load_file(std::string p) {
+void load_file(const std::string &p) {
   size_t bufsiz = 16 * 1024;
   char *buf = (char *)malloc(bufsiz);
 

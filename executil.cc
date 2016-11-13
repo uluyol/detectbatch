@@ -6,8 +6,8 @@
 #include <unistd.h>
 #include <vector>
 
-int exec_getout(std::vector<char> *output, std::string cmd,
-                std::vector<const char *> &args) {
+int exec_getout(std::vector<char> *output, const std::string &cmd,
+                const std::vector<const char *> &args) {
   int fd[2];
   if (pipe(fd) != 0)
     return -1;

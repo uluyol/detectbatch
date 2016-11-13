@@ -11,5 +11,5 @@ typedef struct {
   int32_t num_reads;
 } BenchConfig;
 
-void load_file(std::string benchfile);
-int64_t bench(std::string benchfile, BenchConfig cfg);
+void load_file(const std::string &benchfile);
+int64_t bench(const std::string &benchfile, BenchConfig cfg);

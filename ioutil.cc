@@ -7,7 +7,7 @@
 #include <string>
 #include <unistd.h>
 
-std::string readall(std::string path) {
+std::string readall(const std::string &path) {
   std::ifstream t;
 
   try {
@@ -20,7 +20,7 @@ std::string readall(std::string path) {
   }
 }
 
-ssize_t readnum(std::string path) {
+ssize_t readnum(const std::string &path) {
   auto body = readall(path);
   try {
     return (ssize_t)std::stoul(body);
@@ -29,7 +29,7 @@ ssize_t readnum(std::string path) {
   }
 }
 
-std::string resolve_link(std::string path) {
+std::string resolve_link(const std::string &path) {
   char buf[PATH_MAX];
   auto len = readlink(path.c_str(), buf, PATH_MAX);
   if (len == -1) {
