@@ -1,5 +1,5 @@
+#include <cstdint>
 #include <fcntl.h>
-#include <stdint.h>
 #include <string>
 #include <sys/types.h>
 #include <sys/wait.h>

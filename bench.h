@@ -14,3 +14,6 @@ typedef struct {
 void load_file(const std::string &benchfile);
 int64_t bench(const std::string &benchfile, BenchConfig cfg);
 double bench_tput(const std::string &benchfile, int32_t nops, ssize_t bufsiz);
+int64_t diff_time_us(struct timespec start, struct timespec end);
+
+#define BENCH_FILE_SIZ (1L << 29) /* 512 MB */

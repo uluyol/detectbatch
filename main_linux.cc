@@ -1,3 +1,5 @@
+#include "port.h"
+
 #include "bench.h"
 #include <algorithm>
 #include <cmath>
@@ -59,7 +61,9 @@ int main(int argc, char **argv) {
 
   std::vector<size_t> sysfs_nums;
 
-  ssize_t base_io_size = 512;
+  // Use a base of at least 16 kB or things
+  // will take far too long.
+  ssize_t base_io_size = 16 * 1024;
 
   for (auto &p : sysfs_paths) {
     auto v = readnum(p);
@@ -73,6 +77,7 @@ int main(int argc, char **argv) {
     for (size_t i = 0; i < sysfs_paths.size(); i++)
       std::cerr << "# DEBUG: " << sysfs_paths[i] << ": " << sysfs_nums[i]
                 << "\n";
+    std::cerr << "# DEBUG: base_io_size: " << base_io_size << "\n";
   }
 
   std::string tmpfile = dir_path + "/.detectbatch.tmp";

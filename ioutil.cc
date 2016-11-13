@@ -1,8 +1,8 @@
+#include <cstdint>
 #include <fstream>
 #include <iterator>
 #include <limits.h>
 #include <stdexcept>
-#include <stdint.h>
 #include <streambuf>
 #include <string>
 #include <unistd.h>

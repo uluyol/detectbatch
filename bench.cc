@@ -1,3 +1,5 @@
+#include "port.h"
+
 #include "bench.h"
 #include <cstdlib>
 #include <cstring>
@@ -9,26 +11,6 @@
 #include <string>
 #include <thread>
 #include <unistd.h>
-
-static int64_t diff_time_us(struct timespec start, struct timespec end) {
-  int64_t sec_diff = end.tv_sec - start.tv_sec;
-  int64_t ns_diff = end.tv_nsec - start.tv_nsec;
-  return (int64_t)(sec_diff * 1000000L + ns_diff / 1000L);
-}
-
-static void *aalloc(size_t batchsize) {
-  void *ptr;
-
-  size_t siz = 1;
-  while (siz < batchsize) {
-    siz *= 2;
-  }
-
-  if (posix_memalign(&ptr, siz, siz) != 0) {
-    return NULL;
-  }
-  return ptr;
-}
 
 static void do_reads(std::poisson_distribution<uint32_t> dist, int32_t nops,
                      int fd, char *buf, size_t bufsiz,
@@ -88,8 +70,6 @@ int64_t bench(const std::string &benchfile, BenchConfig cfg) {
   return sum / (double)read_latencies.size();
 }
 
-#define BENCH_FILE_SIZ (1L << 29) /* 512 MB */
-
 static void do_reads(std::poisson_distribution<uint32_t> dist, int32_t nops,
                      int fd, char *buf, size_t bufsiz,
                      std::promise<std::vector<int64_t>> latencies_promise) {
@@ -102,7 +82,7 @@ static void do_reads(std::poisson_distribution<uint32_t> dist, int32_t nops,
     off_t offset = seek_dist(gen) % BENCH_FILE_SIZ;
     offset /= bufsiz;
     offset *= bufsiz;
-    clock_gettime(CLOCK_MONOTONIC, &start);
+    monotonic_time(&start);
     if (lseek(fd, offset, SEEK_SET) != offset)
       perror("unable to seek");
     for (size_t sofar = 0; sofar < bufsiz;) {
@@ -111,7 +91,7 @@ static void do_reads(std::poisson_distribution<uint32_t> dist, int32_t nops,
         perror("unable to read data");
       sofar += (size_t)got;
     }
-    clock_gettime(CLOCK_MONOTONIC, &end);
+    monotonic_time(&end);
     int64_t latency = diff_time_us(start, end);
     latencies[i] = latency;
     int64_t sleep_us = std::max((int64_t)dist(tgen) - latency, (int64_t)0);
@@ -132,7 +112,7 @@ static void do_writes(std::poisson_distribution<uint32_t> dist, int32_t nops,
     off_t offset = seek_dist(gen) % BENCH_FILE_SIZ;
     offset /= bufsiz;
     offset *= bufsiz;
-    clock_gettime(CLOCK_MONOTONIC, &start);
+    monotonic_time(&start);
     if (lseek(fd, offset, SEEK_SET) != offset)
       perror("unable to seek");
     for (size_t sofar = 0; sofar < writesiz;) {
@@ -142,84 +122,11 @@ static void do_writes(std::poisson_distribution<uint32_t> dist, int32_t nops,
         perror("unable to write data");
       sofar += (size_t)got;
     }
-    clock_gettime(CLOCK_MONOTONIC, &end);
+    monotonic_time(&end);
     int64_t latency = diff_time_us(start, end);
     int64_t sleep_us = std::max((int64_t)dist(tgen) - latency, (int64_t)0);
     usleep(sleep_us);
   }
 
   delete junk;
-}
-
-double bench_tput(const std::string &benchfile, int32_t nops, ssize_t bufsiz) {
-  char *buf = (char *)aalloc(bufsiz);
-
-  if (DEBUG)
-    std::cerr << "# DEBUG: reopening " << benchfile << " in direct io mode\n";
-  int fd = open(benchfile.c_str(), O_RDWR | O_DIRECT);
-  if (fd == -1) {
-    perror("unable to open data file");
-    exit(66);
-  }
-
-  std::mt19937 gen(0);
-  std::mt19937 tgen(0);
-  std::uniform_int_distribution<ssize_t> seek_dist;
-
-  struct timespec start, end;
-  clock_gettime(CLOCK_MONOTONIC, &start);
-
-  for (int32_t i = 0; i < nops; i++) {
-    off_t offset = seek_dist(gen) % BENCH_FILE_SIZ;
-    offset /= bufsiz;
-    offset *= bufsiz;
-    if (lseek(fd, offset, SEEK_SET) != offset)
-      perror("unable to seek");
-    for (size_t sofar = 0; sofar < (size_t)bufsiz;) {
-      int got = write(fd, buf, bufsiz);
-      if (got == -1)
-        perror("unable to write data");
-      sofar += (size_t)got;
-    }
-  }
-
-  clock_gettime(CLOCK_MONOTONIC, &end);
-
-  free(buf);
-  close(fd);
-
-  double rt_sec = diff_time_us(start, end) / 1e6;
-  return (double)nops / rt_sec;
-}
-
-void load_file(const std::string &p) {
-  size_t bufsiz = 16 * 1024;
-  char *buf = (char *)malloc(bufsiz);
-
-  if (DEBUG)
-    std::cerr << "# DEBUG: writing random data to " << p << "\n";
-
-  int wfd = creat(p.c_str(), 0666);
-  if (wfd == -1) {
-    perror("unable to create temp file");
-    exit(123);
-  }
-  int fdrand = open("/dev/urandom", O_RDONLY);
-
-  ssize_t wrote = 0;
-  while (wrote < BENCH_FILE_SIZ) {
-    ssize_t got = read(fdrand, buf, bufsiz);
-    if (got == -1) {
-      perror("unable to read /dev/urandom");
-      continue;
-    }
-    wrote += write(wfd, buf, got);
-  }
-
-  if (DEBUG)
-    std::cerr << "# DEBUG: wrote " << wrote << " bytes\n";
-
-  close(wfd);
-  close(fdrand);
-  free(buf);
 }

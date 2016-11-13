@@ -7,22 +7,25 @@ else
 	CFLAGS += -O2 -DDEBUG=0
 endif
 
-HEADERS = 
-SRCS = main_dummy.c
+HEADERS = port.h bench.h
+SRCS = main_dummy.cc port_dummy.cc bench_tput.cc
 
 ifeq ($(BUILD_OS),linux)
 	TRIPLE = x86_64-linux-gnu
-	CFLAGS += -std=gnu++11 -lrt
-	HEADERS = bench.h
-	SRCS = main_linux.cc ioutil.cc executil.cc bench.cc
+	CFLAGS += -lrt -std=gnu++11
+	SRCS = main_linux.cc ioutil.cc executil.cc bench.cc bench_linux.cc port_linux.cc bench_tput.cc
 endif
 
 ifeq ($(BUILD_OS),darwin)
 	TRIPLE = x86_64-apple-darwin14
+	CFLAGS += -stdlib=libc++ -std=gnu++11
+	SRCS += port_darwin.cc bench.cc
 endif
 
 ifeq ($(BUILD_OS),windows)
 	TRIPLE = x86_64-w64-mingw32
+	CFLAGS += -std=gnu++0x
+	SRCS += port_windows.cc
 endif
 
 BUILD_IMAGE = docker.io/steeve/cross-compiler
