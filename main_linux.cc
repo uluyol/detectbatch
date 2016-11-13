@@ -88,8 +88,8 @@ int main(int argc, char **argv) {
   cfg.num_reads = 1000;
 
   int64_t io_size = search_io_size(base_io_size, 8, cfg, tmpfile);
-
-  std::cout << io_size << "\n";
+  double tput = bench_tput(tmpfile, 1000, io_size);
+  std::cout << io_size << " " << tput << "\n";
 
   remove(tmpfile.c_str());
 
