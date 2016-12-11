@@ -90,7 +90,7 @@ int main(int argc, char **argv) {
   cfg.mean_writes_s = 5;
   cfg.rbufsiz = base_io_size;
   cfg.writesiz = 10 * (1 << 20); // 10 MB
-  cfg.num_reads = 1000;
+  cfg.num_reads = 800;
 
   int64_t io_size = search_io_size(base_io_size, 8, cfg, tmpfile);
   double tput = bench_tput(tmpfile, 1000, io_size);
